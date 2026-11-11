@@ -46,5 +46,9 @@ print('miRNA lengths:', benchmark_train['noncodingRNA'].str.len().min(),
 print(benchmark_train['label'].value_counts())
 benchmark_train.head()
 
-
-print('hello world')
+validation_data = benchmark_train.groupby('label').sample(frac=0.20, random_state=seed)
+train_data = benchmark_train.drop(validation_data.index)
+y_train = train_data['label'].to_numpy()
+y_validation = validation_data['label'].to_numpy()
+print('Training:', len(train_data))
+print('Validation:', len(validation_data))
