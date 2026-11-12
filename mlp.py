@@ -63,4 +63,4 @@ def encode_pairs(data):
     labels=data['label'].to_numpy(dtype=np.float32)
 
     for i, (mirna, target) in enumerate(zip(data['noncodingRNA'], data['gene'])):
-        
+        print()
