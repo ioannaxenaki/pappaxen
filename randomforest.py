@@ -56,24 +56,30 @@ print('Validation:', len(validation_data))
 def pad_sequence(sequence, max_length):
     return sequence.ljust(max_length, 'N')
 
-# Convert miRNA and gene sequences to numerical features
-def encode_sequence(sequence):
-    mapping = {'A': 0, 'C': 1, 'G': 2, 'T': 3, 'N': 4}
-    return [mapping[base] for base in sequence]
+# One-hot encode sequence (A, C, G, T -> 4 binary features; N -> all zeros)
+def one_hot_encode(sequence):
+    mapping = {
+        'A': [1, 0, 0, 0],
+        'C': [0, 1, 0, 0],
+        'G': [0, 0, 1, 0],
+        'T': [0, 0, 0, 1],
+        'N': [0, 0, 0, 0],
+    }
+    return np.array([mapping[base] for base in sequence], dtype=np.float32).flatten()
 
-# Pad and encode sequences
-train_data['padded_mirna'] = train_data['noncodingRNA'].apply(pad_sequence, args=(mirna_length,))
-train_data['padded_gene'] = train_data['gene'].apply(pad_sequence, args=(target_length,))
-validation_data['padded_mirna'] = validation_data['noncodingRNA'].apply(pad_sequence, args=(mirna_length,))
-validation_data['padded_gene'] = validation_data['gene'].apply(pad_sequence, args=(target_length,))
+def encode_dataset(df):
+    mirna = np.stack([
+        one_hot_encode(pad_sequence(seq, mirna_length))
+        for seq in df['noncodingRNA']
+    ])
+    gene = np.stack([
+        one_hot_encode(pad_sequence(seq, target_length))
+        for seq in df['gene']
+    ])
+    return np.concatenate((mirna, gene), axis=1)
 
-X_train_mirna = np.array([encode_sequence(seq) for seq in train_data['padded_mirna']])
-X_train_gene = np.array([encode_sequence(seq) for seq in train_data['padded_gene']])
-X_train = np.concatenate((X_train_mirna, X_train_gene), axis=1)
-
-X_validation_mirna = np.array([encode_sequence(seq) for seq in validation_data['padded_mirna']])
-X_validation_gene = np.array([encode_sequence(seq) for seq in validation_data['padded_gene']])
-X_validation = np.concatenate((X_validation_mirna, X_validation_gene), axis=1)
+X_train = encode_dataset(train_data)
+X_validation = encode_dataset(validation_data)
 
 # Create and train the random forest classifier
 rf_classifier = RandomForestClassifier(n_estimators=100, random_state=seed)
