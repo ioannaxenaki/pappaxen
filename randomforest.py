@@ -52,11 +52,10 @@ y_validation = validation_data['label'].to_numpy()
 print('Training:', len(train_data))
 print('Validation:', len(validation_data))
 
-# Pad sequences to a fixed length
 def pad_sequence(sequence, max_length):
     return sequence.ljust(max_length, 'N')
 
-# One-hot encode sequence (A, C, G, T -> 4 binary features; N -> all zeros)
+# One-hot encode sequence
 def one_hot_encode(sequence):
     mapping = {
         'A': [1, 0, 0, 0],
@@ -81,15 +80,15 @@ def encode_dataset(df):
 X_train = encode_dataset(train_data)
 X_validation = encode_dataset(validation_data)
 
-# Create and train the random forest classifier
+
 rf_classifier = RandomForestClassifier(n_estimators=100, random_state=seed)
 rf_classifier.fit(X_train, y_train)
 
-# Make predictions on the validation set
+
 y_pred_rf = rf_classifier.predict(X_validation)
 y_pred_proba_rf = rf_classifier.predict_proba(X_validation)[:, 1]
 
-# Evaluate the random forest model
+# Evaluation of the random forest model
 print("Random Forest Metrics:")
 print("Accuracy:", accuracy_score(y_validation, y_pred_rf))
 print("Balanced Accuracy:", balanced_accuracy_score(y_validation, y_pred_rf))
